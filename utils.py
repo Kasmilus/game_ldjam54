@@ -21,3 +21,6 @@ def get_vector_len(vec: Tuple[int, int]) -> float:
 def get_vector_normalised(vec: Tuple[int, int]) -> Tuple[float, float]:
     len = get_vector_len(vec)
     return vec[0]/len, vec[1]/len
+
+def get_size_for_text(str) -> Tuple[int, int]:
+    return len(str)*4, 6

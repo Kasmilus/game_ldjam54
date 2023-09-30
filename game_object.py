@@ -3,6 +3,7 @@ from enum import Enum
 
 import pyxel
 
+import resources
 from constants import *
 import utils
 
@@ -11,7 +12,12 @@ class ObjType(Enum):
     Undefined = 0
     Text = 1
     Player = 2
-    World = 3
+    Wall = 3
+    Enemy = 4
+    Spawn = 5
+    Bullet = 6
+    Target = 7
+    Background = 8
 
 
 class Obj:
@@ -24,6 +30,7 @@ class Obj:
         self.collides = collides
         self.last_input_frame = 0  # for anim
         self.text = text
+        self.velocity = (0, 0)
 
         if bounding_box is None:
             self.bounding_box = (0, 0, GRID_CELL_SIZE, GRID_CELL_SIZE)
@@ -34,13 +41,35 @@ class Obj:
 
         # Player specific
         if obj_type == ObjType.Player:
-            self.bounding_box = (5, 7, GRID_CELL_SIZE-5, GRID_CELL_SIZE)
+            self.bounding_box = (0, 0, GRID_CELL_SIZE, GRID_CELL_SIZE)
             self.draw_priority = 3
+            self.start_health = 3
+            self.health = self.start_health
+            self.max_ammo = 5
+            self.ammo = self.max_ammo
+            self.sprite = resources.SPRITE_PLAYER_IDLE
+            self.anim_speed = 65
+        if obj_type == ObjType.Enemy:
+            self.bounding_box = (0, 0, GRID_CELL_SIZE, GRID_CELL_SIZE)
+            self.draw_priority = 3
+            self.start_health = 2
+            self.health = self.start_health
+            self.sprite = resources.SPRITE_ENEMY_IDLE
+            self.anim_speed = 8
+
+        if obj_type == ObjType.Bullet:
+            self.bounding_box = (7, 7, GRID_CELL_SIZE-7, GRID_CELL_SIZE-7)
+            self.draw_priority = 4
 
         if obj_type == ObjType.Text:
             self.draw_priority = 2  # Above world, below characters
             self.collides = False
             self.name = "Text"
+
+        if obj_type == ObjType.Background:
+            self.draw_priority = 1  # Above world, below characters
+            self.collides = False
+            self.name = "Bg"
 
     def __repr__(self):
         pos = int(self.pos_x / GRID_CELL_SIZE), int(self.pos_y / GRID_CELL_SIZE)
@@ -64,6 +93,7 @@ class Obj:
         if type(render_sprite) is list:
             render_sprite = render_sprite[int((pyxel.frame_count - self.last_input_frame) / self.anim_speed) % len(render_sprite)]
         return render_sprite
+
 
 
 def collision_bb(pos_a: Tuple[int, int], bb_a: Tuple[int, int, int, int], pos_b: Tuple[int, int], bb_b: Tuple[int, int, int, int]) -> bool:
@@ -141,3 +171,24 @@ def check_obj_move_collision(obj_a: Obj, obj_b: Obj, move_dir: Tuple[int, int]) 
 
     return move_dir[0], move_dir[1]
 
+ALL_OBJECTS = {
+    "BG": {'name': 'Bg', "sprite": resources.SPRITE_BG, "obj_type": ObjType.Background},
+    "DARK_BG": {'name': 'Dark bg', "sprite": resources.SPRITE_DARK_BG, "obj_type": ObjType.Background},
+
+    "PLAYER": {'name': 'Player', "sprite": resources.SPRITE_PLAYER, "obj_type": ObjType.Player},
+
+    "WALL_A": {'name': 'Wall', "sprite": resources.SPRITE_WALL_A, "obj_type": ObjType.Wall},
+    "WALL_B": {'name': 'Wall', "sprite": resources.SPRITE_WALL_B, "obj_type": ObjType.Wall},
+    "WALL_C": {'name': 'Wall', "sprite": resources.SPRITE_WALL_C, "obj_type": ObjType.Wall},
+    "WALL_D": {'name': 'Wall', "sprite": resources.SPRITE_WALL_D, "obj_type": ObjType.Wall},
+    "WALL_E": {'name': 'Wall', "sprite": resources.SPRITE_WALL_E, "obj_type": ObjType.Wall},
+    "WALL_F": {'name': 'Wall', "sprite": resources.SPRITE_WALL_F, "obj_type": ObjType.Wall},
+    "WALL_G": {'name': 'Wall', "sprite": resources.SPRITE_WALL_G, "obj_type": ObjType.Wall},
+    "WALL_H": {'name': 'Wall', "sprite": resources.SPRITE_WALL_H, "obj_type": ObjType.Wall},
+
+    "ENEMY": {'name': 'Enemy', "sprite": resources.SPRITE_Enemy, "obj_type": ObjType.Enemy},
+    "SPAWN": {'name': 'Spawn', "sprite": resources.SPRITE_SPAWN, "obj_type": ObjType.Spawn},
+    "TARGET": {'name': 'Target', "sprite": resources.SPRITE_TARGET, "obj_type": ObjType.Target},
+
+    "BULLET": {'name': 'Bullet', "sprite": resources.SPRITE_BULLET, "obj_type": ObjType.Bullet},
+}

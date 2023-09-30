@@ -30,3 +30,16 @@ def move_camera_to_new_room(room_coords: Tuple[int, int]) -> None:
 
 def get_current_room() -> Tuple[int, int]:
     return get_room_from_pos((game.game.camera_target_x, game.game.camera_target_y))
+
+
+def get_obj_at_pos(x, y):
+    for obj in game.game.objects:
+        if obj.get_cell() == (x, y):
+            return obj
+    return None
+def is_cell_available(x, y):
+    return get_obj_at_pos(x, y) is None
+
+def get_dist_to_player(x, y):
+    player = game.game.player_obj
+    return abs(player.pos_x - x) + abs(player.pos_y - y)

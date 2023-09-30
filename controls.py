@@ -1,13 +1,32 @@
 import pyxel
 
+import resources
+
 
 class Controls:
+    @staticmethod
+    def mouse_cancel(one=True):
+        f = pyxel.btn
+        if one:
+            f = pyxel.btnp
+        return f(pyxel.MOUSE_BUTTON_RIGHT)
     @staticmethod
     def mouse(one=True):
         f = pyxel.btn
         if one:
             f = pyxel.btnp
         return f(pyxel.MOUSE_BUTTON_LEFT)
+
+    @staticmethod
+    def mouse_hovering(x, y, width, height):
+        return x <= pyxel.mouse_x <= x + width and y <= pyxel.mouse_y <= y + height
+    @staticmethod
+    def mouse_in(x, y, width, height, one=True):
+        #pyxel.rectb(x, y, width, height, resources.COLOR_HIGHLIGHT)
+        if Controls.mouse(one):
+            if Controls.mouse_hovering(x, y, width, height):
+                return True
+        return False
 
     @staticmethod
     def left(one=False):
