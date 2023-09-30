@@ -18,6 +18,9 @@ class ObjType(Enum):
     Bullet = 6
     Target = 7
     Background = 8
+    EnemyBig = 9
+    EnemyDead = 10
+    Shotgun = 10
 
 
 class Obj:
@@ -31,6 +34,9 @@ class Obj:
         self.last_input_frame = 0  # for anim
         self.text = text
         self.velocity = (0, 0)
+        self.destroy = False
+        self.has_shotgun = False
+        self.target_pos = (0, 0)
 
         if bounding_box is None:
             self.bounding_box = (0, 0, GRID_CELL_SIZE, GRID_CELL_SIZE)
@@ -52,10 +58,21 @@ class Obj:
         if obj_type == ObjType.Enemy:
             self.bounding_box = (0, 0, GRID_CELL_SIZE, GRID_CELL_SIZE)
             self.draw_priority = 3
-            self.start_health = 2
+            self.start_health = 1
             self.health = self.start_health
             self.sprite = resources.SPRITE_ENEMY_IDLE
             self.anim_speed = 8
+        if obj_type == ObjType.EnemyBig:
+            self.bounding_box = (0, 0, GRID_CELL_SIZE, GRID_CELL_SIZE)
+            self.draw_priority = 3
+            self.start_health = pyxel.rndi(2, 3)
+            self.health = self.start_health
+            self.sprite = resources.SPRITE_ENEMY_BIG_IDLE
+            self.anim_speed = 8
+
+        if obj_type == ObjType.Shotgun:
+            self.draw_priority = 3
+            self.collides = False
 
         if obj_type == ObjType.Bullet:
             self.bounding_box = (7, 7, GRID_CELL_SIZE-7, GRID_CELL_SIZE-7)
@@ -173,9 +190,13 @@ def check_obj_move_collision(obj_a: Obj, obj_b: Obj, move_dir: Tuple[int, int]) 
 
 ALL_OBJECTS = {
     "BG": {'name': 'Bg', "sprite": resources.SPRITE_BG, "obj_type": ObjType.Background},
+    "BGB": {'name': 'Bg', "sprite": resources.SPRITE_BGB, "obj_type": ObjType.Background},
+    "BGC": {'name': 'Bg', "sprite": resources.SPRITE_BGC, "obj_type": ObjType.Background},
     "DARK_BG": {'name': 'Dark bg', "sprite": resources.SPRITE_DARK_BG, "obj_type": ObjType.Background},
 
     "PLAYER": {'name': 'Player', "sprite": resources.SPRITE_PLAYER, "obj_type": ObjType.Player},
+
+    "SHOTGUN": {'name': 'Bonus gun', "sprite": resources.SPRITE_SHOTGUN, "obj_type": ObjType.Shotgun},
 
     "WALL_A": {'name': 'Wall', "sprite": resources.SPRITE_WALL_A, "obj_type": ObjType.Wall},
     "WALL_B": {'name': 'Wall', "sprite": resources.SPRITE_WALL_B, "obj_type": ObjType.Wall},
@@ -187,6 +208,8 @@ ALL_OBJECTS = {
     "WALL_H": {'name': 'Wall', "sprite": resources.SPRITE_WALL_H, "obj_type": ObjType.Wall},
 
     "ENEMY": {'name': 'Enemy', "sprite": resources.SPRITE_Enemy, "obj_type": ObjType.Enemy},
+    "ENEMY_BIG": {'name': 'Enemy Big', "sprite": resources.SPRITE_Enemy_BIG, "obj_type": ObjType.EnemyBig},
+
     "SPAWN": {'name': 'Spawn', "sprite": resources.SPRITE_SPAWN, "obj_type": ObjType.Spawn},
     "TARGET": {'name': 'Target', "sprite": resources.SPRITE_TARGET, "obj_type": ObjType.Target},
 

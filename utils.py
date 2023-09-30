@@ -22,5 +22,10 @@ def get_vector_normalised(vec: Tuple[int, int]) -> Tuple[float, float]:
     len = get_vector_len(vec)
     return vec[0]/len, vec[1]/len
 
-def get_size_for_text(str) -> Tuple[int, int]:
-    return len(str)*4, 6
+def get_size_for_text(txt: str) -> Tuple[int, int]:
+    lines = txt.splitlines()
+    line = max(lines, key=len)
+    return len(line)*4, 6*len(lines)
+
+def deg_to_rad(deg):
+    return deg*3.14/180

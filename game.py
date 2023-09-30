@@ -4,16 +4,18 @@ from enum import Enum
 import pyxel
 
 import constants
+import resources
 from game_object import Obj, ObjType
 
 
 class GameState(Enum):
+    Tutorial = 0
     Game = 1
     GameOver = 2
 
 
 class Dice(Enum):
-    Unrolled = 0
+    Empty = 0
     Run = 1
     Shoot = 2
     Reload = 3
@@ -30,10 +32,20 @@ class Action(Enum):
 
 class Game:
     def __init__(self):
-        self.game_state: GameState = GameState.Game
+        #self.game_state: GameState = GameState.Game
+        self.game_state: GameState = GameState.Tutorial
         self.objects: List[Obj] = []  # List of only objects in current and surrounding rooms
+        self.path = []
+        for i in range(constants.ROOM_SIZE_X):
+            self.path.append([None]*constants.ROOM_SIZE_Y)
 
         self.player_obj: Obj = None  # Reference to the player
+
+        self.tutorial_step = 0
+        self.time_since_tutorial_step = 0
+
+        self.enemies_killed = 0
+        self.total_time = 0
 
         self.camera_x = 0
         self.camera_y = 0
@@ -43,21 +55,45 @@ class Game:
         self.stop_frames = 0
         self.cam_shake_timer = 0
 
-        self.action: Action = Action.MoveEnemy
+        self.action: Action = Action.Roll
         self.action_queue: List = []
         self.dice = [Dice.Run, Dice.Run, Dice.Run]
+        self.dice_roll_timer = [0, 0, 0]
         self.wave_timer = 0
         self.current_wave = 0
         self.selected_enemy = None
         self.new_wave_enemies = 0
 
-        self.roll_die(0, True)
-        self.roll_die(1, True)
-        self.roll_die(2, True)
+        self.shoot_time = 0
+        self.shoot_target = (0, 0)
+
+        self.roll_die(0, True, True)
+        self.roll_die(1, True, True)
+        self.roll_die(2, True, True)
 
     def get_dice_image(self, i):
         assert len(self.dice) > i
-        return self.dice[i].name
+        d = self.dice[i]
+        if self.dice_roll_timer[i] > 0:
+            d = Dice(int((pyxel.frame_count) / 10) % len(Dice))
+
+        if d == Dice.Run:
+            return resources.SPRITE_UI_ICON_RUN
+        elif d == Dice.Reload:
+            return resources.SPRITE_UI_ICON_RELOAD
+        elif d == Dice.Shoot:
+            return resources.SPRITE_UI_ICON_SHOOT
+        elif d == Dice.Enemy:
+            return resources.SPRITE_UI_ICON_ENEMY
+        elif d == Dice.Stuck:
+            return resources.SPRITE_UI_ICON_STUCK
+
+    def get_dice_text(self, i):
+        assert len(self.dice) > i
+        d = self.dice[i]
+        if self.dice_roll_timer[i] > 0:
+            d = Dice(int((pyxel.frame_count) / 10) % len(Dice))
+        return d.name
 
     def is_any_die_stuck(self):
         for i in range(len(self.dice)):
@@ -72,30 +108,33 @@ class Game:
             return False
         return True
 
-    def roll_die(self, i, ignore_stuck: bool = False):
+    def roll_die(self, i, ignore_stuck: bool = False, ignore_enemy = False):
         assert len(self.dice) > i
-        if self.dice[i] == Dice.Stuck:
+        if self.dice[i] == Dice.Stuck and not ignore_stuck:
             return
         if self.action != Action.Roll:
             return
 
         if ignore_stuck:
-            rnd = pyxel.rndi(1,8)
+            rnd = pyxel.rndi(1,9)
+            if ignore_enemy:
+                rnd = pyxel.rndi(1,8)
         else:
-            rnd = pyxel.rndi(1, 9)
+            rnd = pyxel.rndi(1, 10)
         if rnd <= 2:
             self.dice[i] = Dice.Run
-        elif rnd <= 5:
+        elif rnd <= 6:
             self.dice[i] = Dice.Shoot
-        elif rnd <= 7:
-            self.dice[i] = Dice.Reload
         elif rnd <= 8:
+            self.dice[i] = Dice.Reload
+        elif rnd <= 9:
             self.dice[i] = Dice.Enemy
             self.action_queue.insert(0, Action.MoveEnemy)
-        elif rnd <= 9:
+        elif rnd <= 10:
             self.dice[i] = Dice.Stuck
         else:
             assert False
+        self.dice_roll_timer[i] = 1.5
 
     def get_required_num_for_die(self, die):
         required = None
@@ -113,7 +152,7 @@ class Game:
 
         required = self.get_required_num_for_die(die)
         for i in range(len(self.dice)):
-            if self.dice[i] == die:
+            if self.dice[i] == die and self.dice_roll_timer[i] <= 0:
                 required -= 1
         if required <= 0:
             return True
@@ -127,6 +166,7 @@ class Game:
                 if self.dice[i] == die:
                     self.roll_die(i)
                     required -= 1
+                    self.dice[i] = Dice.Empty
                 i += 1
             if die == Dice.Run:
                 self.action = Action.MovePlayer
@@ -147,23 +187,34 @@ class Game:
 
 
     def start_new_wave(self, started_with_timer: bool = False):
-        print("AAA")
         for i in range(len(self.dice)):
             if self.dice[i] == Dice.Stuck:
                 print(i)
                 self.roll_die(i, ignore_stuck=True)
 
+        self.new_wave_enemies = 5
         if started_with_timer:
             if self.current_wave >= len(constants.WAVES):
-                pass  # TODO: Win!
+                pass  # TODO: Win! (If all actions in the queue are done)
             else:
-                self.action = Action.Break
+                self.new_wave_enemies += min(self.current_wave*2, 6)
+                self.action_queue.append(Action.Break)
+        else:
+            self.action_queue.append(Action.NewWave)
 
     def unpause_game(self):
         self.action = Action.NewWave
-        self.new_wave_enemies = 5
-        self.wave_timer = constants.WAVES[self.current_wave]
+        if self.current_wave < len(constants.WAVES):
+            self.wave_timer = constants.WAVES[self.current_wave]
+        else:
+            self.wave_timer = 45
         self.current_wave += 1
+
+    def game_over(self):
+        self.stop_frames = 20
+        self.cam_shake_timer = 0.4
+        self.game_state = GameState.GameOver
+        resources.play_sound(resources.SOUND_PLAYER_DEATH)
 
 
 

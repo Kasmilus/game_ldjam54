@@ -29,6 +29,16 @@ class Controls:
         return False
 
     @staticmethod
+    def key(val):
+        if val == 0:
+            return pyxel.btnp(pyxel.KEY_1)
+        if val == 1:
+            return pyxel.btnp(pyxel.KEY_2)
+        if val == 2:
+            return pyxel.btnp(pyxel.KEY_3)
+        assert False
+
+    @staticmethod
     def left(one=False):
         f = pyxel.btn
         if one:

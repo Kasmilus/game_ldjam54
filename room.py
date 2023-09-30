@@ -2,6 +2,7 @@ import math
 from typing import Tuple
 
 from constants import *
+from game_object import ObjType
 import game
 
 
@@ -34,8 +35,9 @@ def get_current_room() -> Tuple[int, int]:
 
 def get_obj_at_pos(x, y):
     for obj in game.game.objects:
-        if obj.get_cell() == (x, y):
-            return obj
+        if obj.collides == True:
+            if obj.get_cell() == (x, y):
+                return obj
     return None
 def is_cell_available(x, y):
     return get_obj_at_pos(x, y) is None
@@ -43,3 +45,37 @@ def is_cell_available(x, y):
 def get_dist_to_player(x, y):
     player = game.game.player_obj
     return abs(player.pos_x - x) + abs(player.pos_y - y)
+
+
+def floodfill(start_pos: Tuple[int, int]):
+    open_list = [start_pos]
+
+    for pos in open_list:
+        if 0 > pos[0] > len(game.game.path):
+            continue
+        if 0 > pos[1] > len(game.game.path[0]):
+            continue
+        val = game.game.path[pos[0]][pos[1]]
+        if val is None:
+            val = 0
+        for x in range(-1, 2):
+            for y in range(-1, 2):
+                if x == 0 and y == 0:
+                    continue
+                if game.game.path[pos[0]+x][pos[1]+y] is None:
+                    if is_cell_available(pos[0]+x, pos[1]+y):
+                        game.game.path[pos[0] + x][pos[1] + y] = val + 1
+                        open_list.append((pos[0]+x, pos[1]+y))
+
+def is_path_acceptable(from_pos, to_pos) -> bool:
+    if 0 > to_pos[0] > len(game.game.path):
+        return False
+    if 0 > to_pos[1] > len(game.game.path[0]):
+        return False
+    val_from = game.game.path[from_pos[0]][from_pos[1]]
+    val_to = game.game.path[to_pos[0]][to_pos[1]]
+    if val_from is None:
+        val_from = 999
+    if val_to is None:
+        return False
+    return val_to < val_from
