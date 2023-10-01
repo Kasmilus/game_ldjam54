@@ -6,7 +6,7 @@ It’s a real-time turn-based action shooter game. Survive as long as possible t
 
 Controls: Mouse + 1/2/3 shortcuts for rerolling action symbols
 
-![Screenshot](ss.png)
+![Screenshot](ss.PNG)
 
 
 Made in 48 hours for Ludum Dare 54
