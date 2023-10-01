@@ -47,6 +47,9 @@ class Game:
         self.enemies_killed = 0
         self.total_time = 0
 
+        self.count_bullets = 0
+        self.count_enemies_d = 0
+
         self.camera_x = 0
         self.camera_y = 0
         self.camera_target_x = 0

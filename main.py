@@ -35,6 +35,7 @@ def init():
     game.game.player_obj = obj
     obj = Obj(pos=(8*constants.GRID_CELL_SIZE, 5*constants.GRID_CELL_SIZE), **game_object.ALL_OBJECTS['SHOTGUN'])
     game.game.objects.append(obj)
+    game.game.objects.append(Obj(pos=(8*constants.GRID_CELL_SIZE, 5*constants.GRID_CELL_SIZE), **game_object.ALL_OBJECTS['BG']))
     obj = Obj(pos=(1*constants.GRID_CELL_SIZE, 6*constants.GRID_CELL_SIZE), **game_object.ALL_OBJECTS['HEALTH'])
     game.game.objects.append(obj)
     obj = Obj(pos=(12*constants.GRID_CELL_SIZE, 2*constants.GRID_CELL_SIZE), **game_object.ALL_OBJECTS['SPEED'])
@@ -187,7 +188,15 @@ def update():
                             obj.velocity = (0, 0)
                             obj.draw_priority = 2
                             obj.sprite = resources.SPRITE_BULLET_SHELL
+                            obj.collides = False
                             hit_something = True
+                            game.game.count_bullets += 1
+                            if game.game.count_bullets > 10:
+                                for bul in game.game.objects:
+                                    if bul.obj_type == ObjType.Bullet:
+                                        destroy_list.append(bul)
+                                        break
+
                             if obj_2.obj_type == ObjType.Enemy or obj_2.obj_type == ObjType.EnemyBig:
                                 resources.play_sound(resources.SOUND_HIT)
                                 obj_2.health -= 1
@@ -209,6 +218,12 @@ def update():
                                     resources.play_sound(resources.SOUND_ENEMY_DEATH)
                                     obj.pos_x += vel[0]*2
                                     obj.pos_x += vel[1]*2
+                                    game.game.count_enemies_d += 1
+                                    if game.game.count_enemies_d > 10:
+                                        for bul in game.game.objects:
+                                            if bul.obj_type in [ObjType.EnemyDead]:
+                                                destroy_list.append(bul)
+                                                break
                 if hit_something == True:
                     resources.play_sound(resources.SOUND_MISS)
                     game.game.cam_shake_timer = 0.06
@@ -288,7 +303,7 @@ def draw():
         else:
             resources.blt_sprite(obj.get_render_sprite(), obj.pos_x, obj.pos_y, invert=obj.last_move_dir<0)
 
-            if obj.obj_type == ObjType.Enemy:
+            if obj.obj_type in [ObjType.Enemy, ObjType.EnemyBig]:
                 if Controls.mouse_hovering(obj.pos_x, obj.pos_y, constants.GRID_CELL_SIZE, constants.GRID_CELL_SIZE):
                     draw_health(obj)
                 if obj.target_pos != (0, 0):
