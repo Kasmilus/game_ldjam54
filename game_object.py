@@ -20,7 +20,9 @@ class ObjType(Enum):
     Background = 8
     EnemyBig = 9
     EnemyDead = 10
-    Shotgun = 10
+    Shotgun = 11
+    Speed = 12
+    Health = 13
 
 
 class Obj:
@@ -36,7 +38,13 @@ class Obj:
         self.velocity = (0, 0)
         self.destroy = False
         self.has_shotgun = False
+        self.last_move_dir = 1
+
+        self.move_start_pos = (0, 0)
         self.target_pos = (0, 0)
+        self.move_timer = 0
+
+        self.hit_frames = 0
 
         if bounding_box is None:
             self.bounding_box = (0, 0, GRID_CELL_SIZE, GRID_CELL_SIZE)
@@ -49,33 +57,37 @@ class Obj:
         if obj_type == ObjType.Player:
             self.bounding_box = (0, 0, GRID_CELL_SIZE, GRID_CELL_SIZE)
             self.draw_priority = 3
-            self.start_health = 3
+            self.start_health = 1
             self.health = self.start_health
-            self.max_ammo = 5
+            self.max_ammo = 3
             self.ammo = self.max_ammo
             self.sprite = resources.SPRITE_PLAYER_IDLE
             self.anim_speed = 65
+            self.max_movement = 2
+            self.movement = self.max_movement
+            self.max_shots = 2
+            self.shots = self.max_shots
         if obj_type == ObjType.Enemy:
-            self.bounding_box = (0, 0, GRID_CELL_SIZE, GRID_CELL_SIZE)
+            self.bounding_box = (2, 2, GRID_CELL_SIZE - 2, GRID_CELL_SIZE - 2)
             self.draw_priority = 3
             self.start_health = 1
             self.health = self.start_health
             self.sprite = resources.SPRITE_ENEMY_IDLE
             self.anim_speed = 8
         if obj_type == ObjType.EnemyBig:
-            self.bounding_box = (0, 0, GRID_CELL_SIZE, GRID_CELL_SIZE)
+            self.bounding_box = (1, 1, GRID_CELL_SIZE - 1, GRID_CELL_SIZE - 1)
             self.draw_priority = 3
             self.start_health = pyxel.rndi(2, 3)
             self.health = self.start_health
             self.sprite = resources.SPRITE_ENEMY_BIG_IDLE
             self.anim_speed = 8
 
-        if obj_type == ObjType.Shotgun:
+        if obj_type in [ObjType.Shotgun, ObjType.Speed, ObjType.Health]:
             self.draw_priority = 3
             self.collides = False
 
         if obj_type == ObjType.Bullet:
-            self.bounding_box = (7, 7, GRID_CELL_SIZE-7, GRID_CELL_SIZE-7)
+            self.bounding_box = (6, 6, GRID_CELL_SIZE-6, GRID_CELL_SIZE-6)
             self.draw_priority = 4
 
         if obj_type == ObjType.Text:
@@ -108,7 +120,8 @@ class Obj:
     def get_render_sprite(self) -> Tuple[int, int]:
         render_sprite = self.sprite
         if type(render_sprite) is list:
-            render_sprite = render_sprite[int((pyxel.frame_count - self.last_input_frame) / self.anim_speed) % len(render_sprite)]
+            n = pyxel.noise(self.pos_x/10, self.pos_y/10)
+            render_sprite = render_sprite[int((pyxel.frame_count - self.last_input_frame + 10*n) / self.anim_speed) % len(render_sprite)]
         return render_sprite
 
 
@@ -197,6 +210,8 @@ ALL_OBJECTS = {
     "PLAYER": {'name': 'Player', "sprite": resources.SPRITE_PLAYER, "obj_type": ObjType.Player},
 
     "SHOTGUN": {'name': 'Bonus gun', "sprite": resources.SPRITE_SHOTGUN, "obj_type": ObjType.Shotgun},
+    "HEALTH": {'name': 'Bonus hp', "sprite": resources.SPRITE_HEALTH, "obj_type": ObjType.Health},
+    "SPEED": {'name': 'Bonus speed', "sprite": resources.SPRITE_SPEED, "obj_type": ObjType.Speed},
 
     "WALL_A": {'name': 'Wall', "sprite": resources.SPRITE_WALL_A, "obj_type": ObjType.Wall},
     "WALL_B": {'name': 'Wall', "sprite": resources.SPRITE_WALL_B, "obj_type": ObjType.Wall},
@@ -206,6 +221,13 @@ ALL_OBJECTS = {
     "WALL_F": {'name': 'Wall', "sprite": resources.SPRITE_WALL_F, "obj_type": ObjType.Wall},
     "WALL_G": {'name': 'Wall', "sprite": resources.SPRITE_WALL_G, "obj_type": ObjType.Wall},
     "WALL_H": {'name': 'Wall', "sprite": resources.SPRITE_WALL_H, "obj_type": ObjType.Wall},
+    "WALL_AA": {'name': 'Wall', "sprite": resources.SPRITE_WALL_AA, "obj_type": ObjType.Wall},
+    "WALL_BB": {'name': 'Wall', "sprite": resources.SPRITE_WALL_BB, "obj_type": ObjType.Wall},
+    "WALL_CC": {'name': 'Wall', "sprite": resources.SPRITE_WALL_CC, "obj_type": ObjType.Wall},
+    "WALL_DD": {'name': 'Wall', "sprite": resources.SPRITE_WALL_DD, "obj_type": ObjType.Wall},
+    "WALL_EE": {'name': 'Wall', "sprite": resources.SPRITE_WALL_EE, "obj_type": ObjType.Wall},
+    "WALL_XX": {'name': 'Wall', "sprite": resources.SPRITE_WALL_XX, "obj_type": ObjType.Wall},
+    "WALL_YY": {'name': 'Wall', "sprite": resources.SPRITE_WALL_YY, "obj_type": ObjType.Wall},
 
     "ENEMY": {'name': 'Enemy', "sprite": resources.SPRITE_Enemy, "obj_type": ObjType.Enemy},
     "ENEMY_BIG": {'name': 'Enemy Big', "sprite": resources.SPRITE_Enemy_BIG, "obj_type": ObjType.EnemyBig},

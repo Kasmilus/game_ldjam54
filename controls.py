@@ -19,7 +19,7 @@ class Controls:
 
     @staticmethod
     def mouse_hovering(x, y, width, height):
-        return x <= pyxel.mouse_x <= x + width and y <= pyxel.mouse_y <= y + height
+        return x < pyxel.mouse_x < x + width and y < pyxel.mouse_y < y + height
     @staticmethod
     def mouse_in(x, y, width, height, one=True):
         #pyxel.rectb(x, y, width, height, resources.COLOR_HIGHLIGHT)

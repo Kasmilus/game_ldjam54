@@ -1,3 +1,5 @@
 /.idea
 /__pycache__
 /pyxel_examples
+*.html
+*.pyxapp

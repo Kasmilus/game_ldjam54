@@ -18,5 +18,9 @@ ROOM_SIZE_PIXELS_Y: int = int(SCREEN_HEIGHT) - UI_SIZE
 DEBUG_DRAW: bool = False
 
 # Time per wave
-WAVES = [60, 60, 60]
+WAVES = [90, 90, 120, 180, 120]
+# Enemies per wave
+WAVE_COUNT = [5, 10, 15, 20, 20]
+
 BULLET_SPEED = 20
+MOVE_ANIM_TIME = 0.6

@@ -58,6 +58,7 @@ def floodfill(start_pos: Tuple[int, int]):
         val = game.game.path[pos[0]][pos[1]]
         if val is None:
             val = 0
+            game.game.path[pos[0]][pos[1]] = val
         for x in range(-1, 2):
             for y in range(-1, 2):
                 if x == 0 and y == 0:

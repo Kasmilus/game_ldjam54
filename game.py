@@ -16,7 +16,7 @@ class GameState(Enum):
 
 class Dice(Enum):
     Empty = 0
-    Run = 1
+    Move = 1
     Shoot = 2
     Reload = 3
     Enemy = 4
@@ -57,9 +57,9 @@ class Game:
 
         self.action: Action = Action.Roll
         self.action_queue: List = []
-        self.dice = [Dice.Run, Dice.Run, Dice.Run]
+        self.dice = [Dice.Move, Dice.Move, Dice.Move]
         self.dice_roll_timer = [0, 0, 0]
-        self.wave_timer = 0
+        self.wave_timer = 90
         self.current_wave = 0
         self.selected_enemy = None
         self.new_wave_enemies = 0
@@ -71,13 +71,18 @@ class Game:
         self.roll_die(1, True, True)
         self.roll_die(2, True, True)
 
+        self.slide_text = ""
+        self.slide_text_timer = -10
+
+        self.time_since_game_over = 0
+
     def get_dice_image(self, i):
         assert len(self.dice) > i
         d = self.dice[i]
         if self.dice_roll_timer[i] > 0:
-            d = Dice(int((pyxel.frame_count) / 10) % len(Dice))
+            d = Dice(int((pyxel.frame_count + i*12) / 10) % len(Dice))
 
-        if d == Dice.Run:
+        if d == Dice.Move:
             return resources.SPRITE_UI_ICON_RUN
         elif d == Dice.Reload:
             return resources.SPRITE_UI_ICON_RELOAD
@@ -122,7 +127,7 @@ class Game:
         else:
             rnd = pyxel.rndi(1, 10)
         if rnd <= 2:
-            self.dice[i] = Dice.Run
+            self.dice[i] = Dice.Move
         elif rnd <= 6:
             self.dice[i] = Dice.Shoot
         elif rnd <= 8:
@@ -135,15 +140,16 @@ class Game:
         else:
             assert False
         self.dice_roll_timer[i] = 1.5
+        resources.play_sound(resources.SOUND_ROLL)
 
     def get_required_num_for_die(self, die):
         required = None
-        if die == Dice.Run:
+        if die == Dice.Move:
             required = 1
         elif die == Dice.Shoot:
             required = 2
         elif die == Dice.Reload:
-            required = 2
+            required = 1
         return required
 
     def can_do_die_action(self, die):
@@ -168,12 +174,15 @@ class Game:
                     required -= 1
                     self.dice[i] = Dice.Empty
                 i += 1
-            if die == Dice.Run:
+            if die == Dice.Move:
                 self.action = Action.MovePlayer
+                self.do_slide_text("Move!")
             elif die == Dice.Shoot:
                 self.action = Action.Shoot
+                self.do_slide_text("Shoot!")
             elif die == Dice.Reload:
                 self.player_obj.ammo = self.player_obj.max_ammo
+                self.do_slide_text("Reloaded!")
 
     def set_action(self, action):
         self.action_queue.append(action)
@@ -192,15 +201,18 @@ class Game:
                 print(i)
                 self.roll_die(i, ignore_stuck=True)
 
-        self.new_wave_enemies = 5
         if started_with_timer:
             if self.current_wave >= len(constants.WAVES):
-                pass  # TODO: Win! (If all actions in the queue are done)
+                self.new_wave_enemies += min(self.current_wave*3, 20)
             else:
-                self.new_wave_enemies += min(self.current_wave*2, 6)
+                self.new_wave_enemies = constants.WAVE_COUNT[self.current_wave]
                 self.action_queue.append(Action.Break)
         else:
+            self.new_wave_enemies = 5
             self.action_queue.append(Action.NewWave)
+
+        if self.current_wave > 0 or started_with_timer is False:
+            self.do_slide_text("New Wave!")
 
     def unpause_game(self):
         self.action = Action.NewWave
@@ -211,12 +223,16 @@ class Game:
         self.current_wave += 1
 
     def game_over(self):
-        self.stop_frames = 20
-        self.cam_shake_timer = 0.4
+        self.do_slide_text("Game Over")
+        self.stop_frames = 6
+        self.cam_shake_timer = 0.5
         self.game_state = GameState.GameOver
         resources.play_sound(resources.SOUND_PLAYER_DEATH)
+        self.time_since_game_over = 0
 
-
+    def do_slide_text(self, text):
+        self.slide_text = text
+        self.slide_text_timer = 1
 
 
 def init_game():

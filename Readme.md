@@ -1,55 +1,12 @@
-LudumDare game
+# Greasy Justice
 
-# TODO
+Aliens with limited brain space are invading! They want your burger (or your life…). Their strategy is to overrun you, limiting your (physical) space, don’t let them!
 
-## Done
+It’s a real-time turn-based action shooter game. Survive as long as possible to get the highest score.
 
-* Timer - spawn new wave at the end
-    * Button to start next round
-* Ammo
-* Roll buttons
-* Game state forcing you to:
-    * Move enemy on rolling enemy
-    * Spawn enemies on use "unstuck"
-* Player death
-  * Enemy and player hearts to show HP left
-* Shoot angle over time
-* Shotgun pickup
-* Player loss when enemies get to the "goal" protected by the player - TODO: test
-* Enemy move direction - "dijsktra floodfill"
-* Tutorial: Defend this, dont lose life, kill them, roll here, press here to use dice, have a break between waves, start new wave here, go for high score
-  * Use arrows and circles around objects pointed to
-* Show score on loss (waves, enemies killed)
+Controls: Mouse + 1/2/3 shortcuts for rerolling action symbols
 
-* Slight shot variation (random)
+![Screenshot](ss.png)
 
-## In progress
 
-* Add sounds
-* Move enemies on enemies
-  * Show arrow and immediately switch to forcing next enemy move - started but its broken
-  
-* Looks like some really nasty bug with clicks being ignored, is it because its done in draw()? TODO: YUP convfirmed we might skip draw if frame is too slow, should fix this
-
-* States - spawn bugs
-  * Spawn enemies wave
-  
-## Essential
-
-* Restart with space on death
-* Rewrite logic so it's in update instead of draw
-* Setup first 6 waves, then constant large ammount
-
-## Juice
-
-* Cam shake
-* Stop frames
-* Graphics
-* Graphics animation
-* Blink on hit
-* Screen flash on new wave spawn
-* Smooth anim for movement
-* SFX
-* Music
-* Show arrows for path on hover
-* Smooth move enemies and player (slerp?)
+Made in 48 hours for Ludum Dare 54
